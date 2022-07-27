@@ -1,4 +1,6 @@
+from re import sub, match
 from argparse import ArgumentParser, FileType
+from utils import error
 
 class Krpsim:
 	def __init__(self):
@@ -12,6 +14,17 @@ class Krpsim:
 		args = parser.parse_args()
 		self.cycle = args.cycle
 		f = args.file.read()
+		f = sub(r'#.*', '', f)
+		### Didn't do the regex ###
+		for elt in f.split('\n'):
+			if match(r'', elt):
+				print('match stock item')
+			elif match(r'', elt):
+				print('match processus')
+			else:
+				error('bad_file')
+		### END ###
+
 		# run parser file
 		### START TRY ###
 		self.stock.append(['client_content', 1])

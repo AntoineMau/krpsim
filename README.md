@@ -1,9 +1,9 @@
 # krpsim
-## Table of Contents
+## Table des Matières
 * [Introduction](#introduction)
 * [Python Requirements](#python-requirements)
-* [Usage](#usage)
-* [More info](#more-info)
+* [Utilisation](#utilisation)
+* [Plus info](#plus-info)
   
 ## Introduction
 Vous avez peut-être déjà vu un de ces jolis diagrammes de gestion de projet où figurent 
@@ -22,18 +22,18 @@ le plus possible.
 ## Python Requirements
 **install requirements:** <code>$ python3 -m pip install -r requirements.txt</code>  
   
-## Usage
-<pre><code>usage: krpsim.py [-h] file [-c CYCLE]
+## Utilisation
+<pre><code>usage: krpsim.py [-h] [-c CYCLE] file
 
 positional arguments:
-  file                  process file
+  file                  file to process
 
 optional arguments:
   -h, --help            show this help message and exit
   -c CYCLE, --cycle CYCLE
-                        Number of cycle</code></pre>  
+                        number of cycle. default:100</code></pre>  
   
-## More info
+## Plus info
 **Autor:** [Antoine Mauffret](https://github.com/AntoineMau)  
   
 **Subject:** [krpsim](https://cdn.intra.42.fr/pdf/pdf/57255/fr.subject.pdf)

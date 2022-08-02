@@ -15,16 +15,20 @@ class Krpsim:
 		self.cycle = args.cycle
 		f = args.file.read()
 		f = sub(r'#.*', '', f)
-		### Didn't do the regex ###
+
+		### REGEX GOOD I THINK ### (stock would be fine but need to try it and didn't do processus and optimize)
 		for elt in f.split('\n'):
-			if match(r'', elt):
-				print('match stock item')
-			elif match(r'', elt):
+			if match(r'^[a-z]+:\d+$', elt):
+				self.stock.append(elt.split(':'))
+			elif match(r'^[a-z_]+:\(([a-z_]+:\d;?)+\):\(([a-z_]+:\d;?)+\):\d+$', elt):
 				print('match processus')
+			elif match(r'^optimize:\(time;[a-z_]+\)$', elt):
+				print('match optimize')
 			else:
 				error('bad_file')
+			print(elt)
 		### END ###
-
+		
 		# run parser file
 		### START TRY ###
 		self.stock.append(['client_content', 1])

@@ -1,6 +1,7 @@
 from re import sub, match, findall
 from argparse import ArgumentParser, FileType
 from utils import error
+from time import time
 
 class Process:
 	def __init__(self, line):
@@ -30,8 +31,10 @@ class Process:
 		print('delay: %s\n' % self.delay)
 
 class Krpsim:
-	def __init__(self):
+	def __init__(self, startTime):
 		self.maxCycle = int()
+		self.maxTime = int()
+		self.startTime = startTime
 		self.stock = list()
 		self.lstProcess = list()
 		self.optimize = str()
@@ -43,9 +46,9 @@ class Krpsim:
 		parser.add_argument('-c', '--cycle', default=10000, help='max number of cycle. default:10000')
 		args = parser.parse_args()
 		self.maxCycle = args.cycle
+		self.maxTime = args.delay
 		f = args.file.read()
 		f = sub(r'#.*', '', f)
-
 		for elt in f.split('\n'):
 			if elt == '\n' or elt == '':
 				pass
@@ -67,6 +70,10 @@ class Krpsim:
 		print('40:livraison')
 		print('no more process doable at time 61')
 		### END ###
+		deltaTime = time() - self.startTime
+		if deltaTime > self.maxTime:
+			print(deltaTime)
+			exit(1)
 
 	def print(self):
 		print('Stock :')
@@ -74,10 +81,11 @@ class Krpsim:
 			print('%s => %s' % (elt[0], elt[1]))
 
 def main():
-	krpsim = Krpsim()
+	krpsim = Krpsim(time())
 	krpsim.parser()
 	krpsim.process()
 	krpsim.print()
+	print('time:', time() - krpsim.startTime)
 	exit(0)
 
 if __name__ == '__main__':

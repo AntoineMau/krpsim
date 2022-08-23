@@ -23,17 +23,18 @@ le plus possible.
 **install requirements:** <code>$ python3 -m pip install -r requirements.txt</code>  
   
 ## Utilisation
-<pre><code>usage: krpsim.py [-h] [-c CYCLE] file
+<pre><code>usage: krpsim.py [-h] [-c CYCLE] file delay
 
 positional arguments:
   file                  file to process
+  delay                 max time to process
 
 optional arguments:
   -h, --help            show this help message and exit
   -c CYCLE, --cycle CYCLE
-                        number of cycle. default:100</code></pre>  
+                        max number of cycle. default:10000</code></pre>  
   
 ## Plus info
-**Autor:** [Antoine Mauffret](https://github.com/AntoineMau)  
+**Autor:** [Antoine Mauffret](https://github.com/AntoineMau) [Martin de Lagarde](https://github.com/Martydl)  
   
 **Subject:** [krpsim](https://cdn.intra.42.fr/pdf/pdf/57255/fr.subject.pdf)

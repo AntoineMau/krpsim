@@ -1,3 +1,4 @@
+from pickletools import optimize
 from random import choice
 
 class Child:
@@ -11,17 +12,31 @@ class Child:
 		self.genInstructions(lst_process)
 
 	def genInstructions(self, lst_process):
-		self.selectNeedProcess(lst_process)#init besoin et instructions
-		print('END', self.instructions, self.need_stock)
-		exit(0)
-		while self.need_stock:
-			pass#remplir 1 besoin
+		self.selectProcess(self.optimize, 10000, lst_process)#init besoin et instructions
+		while self.need_stock != {}:
+			#remplir 1 besoin
+			print(self.instructions, self.need_stock)
+			name1 = list(self.need_stock.keys())[0]
+			self.selectProcess(name1, self.need_stock[name1], lst_process)
 
-	def selectNeedProcess(self, lst_process):
-		lst_possible_process = self.listPossibleProcess(lst_process, self.optimize)
+	def selectProcess(self, need_name, need_quantity, lst_process):
+		lst_possible_process = self.listPossibleProcess(need_name, lst_process)
 		chosen_process = choice(lst_possible_process)
-		self.instructions.append(chosen_process.name)
-		self.updateAddNeedStock(chosen_process.need)
+		if chosen_process.name == 'take_from_stock': #that not a struct, need to find something
+			nb = self.has_stock[need_name] - need_quantity
+			if nb < 0:
+				self.has_stock[need_name] = 0
+				self.updateSubNeedStock({need_name: nb})
+			else:
+				self.has_stock[need_name] = nb
+				del self.need_stock[need_name]
+		else:
+			self.instructions.append(chosen_process.name) #ici frero
+			self.updateAddNeedStock(chosen_process.need)
+			self.updateSubNeedStock(chosen_process.result)
+
+	# def updateHasStock(self, need_name, need_quantity):
+
 
 	def updateAddNeedStock(self, items):
 		for elt in items:
@@ -30,18 +45,23 @@ class Child:
 			except KeyError:
 				self.need_stock[elt] = items[elt]
 
-	def updateDelNeedStock(self, items): #normalement pas de try except mais pour l'instant flemme de verif
-		for key, value in items:
+	def updateSubNeedStock(self, items): #normalement pas de try except mais pour l'instant flemme de verif
+		for elt in items:
 			try:
-				self.need_stock[key] -= value
+				self.need_stock[elt] -= items[elt]
 			except KeyError:
-				self.need_stock[key] = -value
+				self.need_stock[elt] = -items[elt]
+			if self.need_stock[elt] <= 0:
+				del self.need_stock[elt]
 
-	def listPossibleProcess(self, lst_process, need_name): # need_quantity: unsigned int zith -1 for start (tranfromed into max uint=2*217183647 + 1)
+	def listPossibleProcess(self, need_name, lst_process): # need_quantity: unsigned int zith -1 for start (tranfromed into max uint=2*217183647 + 1)
 		lst_possible_process = list()
 		for process in lst_process:
 			if need_name in lst_process[process].result.keys():
 				lst_possible_process.append(lst_process[process])
+		if need_name in list(self.has_stock.keys()):
+			lst_possible_process.append({'name': 'take_from_stock'})
+			print('lst_possible_process:', lst_possible_process[0].name)
 		return lst_possible_process
 
 # 	def remplirBesoin(self):

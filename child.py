@@ -1,82 +1,52 @@
-from operator import index
-from random import choices
+from random import choice
 
 class Child:
-	def __init__(self, startStock, lst_process):
-		self.stock = startStock
+	def __init__(self, start_stock, lst_process, optimize):
+		self.has_stock = start_stock
+		self.need_stock = dict()
 		self.instructions = list()
 		self.score = int()
 		self.opt_val = int()
+		self.optimize = optimize
 		self.genInstructions(lst_process)
 
 	def genInstructions(self, lst_process):
-		cycle = 0
-		actions = self.chooseActions(lst_process)
-		self.instructions = list([cycle, actions])
-		lst_todo = self.updateTodo(cycle, actions, lst_process, dict())
-		while lst_todo and cycle < 50000:
-			cycle = sorted([int(index) for index in lst_todo.keys()])[0];
-			self.updateAddStock(lst_todo[cycle], lst_process)
-			del lst_todo[cycle]
-			actions = self.chooseActions(lst_process)
-			self.instructions.append([cycle, actions])
-			lst_todo = self.updateTodo(cycle, actions, lst_process, lst_todo)
-		return self.instructions
+		self.selectNeedProcess(lst_process)#init besoin et instructions
+		print('END', self.instructions, self.need_stock)
+		exit(0)
+		while self.need_stock:
+			pass#remplir 1 besoin
 
-	def updateAddStock(self, todo, lst_process):
-		for process_hash in todo:
-			for key, value in lst_process[process_hash].result.items():
-				try:
-					self.stock[key] += value
-				except KeyError:
-					self.stock[key] = value
+	def selectNeedProcess(self, lst_process):
+		lst_possible_process = self.listPossibleProcess(lst_process, self.optimize)
+		chosen_process = choice(lst_possible_process)
+		self.instructions.append(chosen_process.name)
+		self.updateAddNeedStock(chosen_process.need)
 
-	def updateDelStock(self, process_hash, lst_process): #normale;ent pas de try except mais pour l'instant flemme de verif
-		for key, value in lst_process[process_hash].need.items():
+	def updateAddNeedStock(self, items):
+		for elt in items:
 			try:
-				self.stock[key] -= value
+				self.need_stock[elt] += items[elt]
 			except KeyError:
-				self.stock[key] = value
+				self.need_stock[elt] = items[elt]
 
-	def updateTodo(self, cycle, actions, lst_process, lst_todo):
-		for action in actions:
+	def updateDelNeedStock(self, items): #normalement pas de try except mais pour l'instant flemme de verif
+		for key, value in items:
 			try:
-				lst_todo[cycle+lst_process[action].delay].append(action)
+				self.need_stock[key] -= value
 			except KeyError:
-				lst_todo[cycle+lst_process[action].delay] = [action]
-		return lst_todo
+				self.need_stock[key] = -value
 
-	def checkPossibleProcess(self, lst_process, first_round):
-		if not first_round:
-			possible_process = ['next_cycle']
-		else:
-			possible_process = list()
-		for i, process in lst_process.items():
-			for key, value in process.need.items():
-				try:
-					if self.stock[key] < value:
-						break
-					if list(process.need.keys())[-1] == key:
-						possible_process.append(i)
-				except KeyError:
-					break
+	def listPossibleProcess(self, lst_process, need_name): # need_quantity: unsigned int zith -1 for start (tranfromed into max uint=2*217183647 + 1)
+		lst_possible_process = list()
+		for process in lst_process:
+			if need_name in lst_process[process].result.keys():
+				lst_possible_process.append(lst_process[process])
+		return lst_possible_process
 
-		return possible_process
-
-	def chooseActions(self, lst_process):
-		instructions_cycle = list()
-		first_round = True
-		while 1:
-			possible_process = self.checkPossibleProcess(lst_process, first_round)
-			weigth = [1.0 for len in range(len(possible_process))]
-			if not first_round:
-				weigth[0] = 0.1
-			#print(self.stock)
-			chosen_process = choices(possible_process)[0]
-			#print('chosen_process:', chosen_process)
-			if chosen_process == 'next_cycle':
-				break
-			instructions_cycle.append(chosen_process)
-			self.updateDelStock(chosen_process, lst_process)
-			first_round = False
-		return instructions_cycle
+# 	def remplirBesoin(self):
+# 		#choisir aleatoirement quel process pour remplir besoin
+# 		#update need_stock (retirer cause de la fonction, ajouter cout)
+# 		#ajouter process a liste d'instructions
+# 		#si pas possible de remplir le besoin, l'enfant est con et moche donc stop
+# 		pass

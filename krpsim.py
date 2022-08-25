@@ -69,7 +69,7 @@ class Krpsim:
 				error('bad_file')
 
 	def process(self):
-		child = Child(self.stock, self.lst_process)
+		child = Child(self.stock, self.lst_process, self.optimize)
 		print('instructions:', child.instructions)
 		delta_time = time() - self.start_time
 		if delta_time > self.max_time:

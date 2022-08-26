@@ -1,8 +1,9 @@
 from random import choice
+from math import ceil
 
 class Child:
 	def __init__(self, start_stock, lst_process, optimize):
-		self.has_stock = start_stock.copy() #penser a stocker exces achat ici ex. buy oeuf
+		self.has_stock = start_stock.copy()
 		self.need_stock = dict()
 		self.instructions = list()
 		self.score = int()
@@ -13,29 +14,12 @@ class Child:
 	def genInstructions(self, lst_process):
 		self.selectProcess(self.optimize, -1, lst_process)#init besoin et instructions
 		while self.need_stock != {}:
-			# print(self.instructions, self.need_stock)
-			# print(self.need_stock)
+			print(self.need_stock)
 			name1 = list(self.need_stock.keys())[0]
 			if not self.selectProcess(name1, self.need_stock[name1], lst_process):
-				print('Enfant con!')
+				print('Enfant con et moche donc stop')
 				break
 		# print('self.has_stock:', self.has_stock)
-
-	# def selectProcess(self, need_name, need_quantity, lst_process):
-	# 	lst_possible_process = self.listPossibleProcess(need_name, lst_process)
-	# 	chosen_process = choice(lst_possible_process)
-	# 	if chosen_process.name == 'take_from_stock': #that not a struct, need to find something
-	# 		nb = self.has_stock[need_name] - need_quantity
-	# 		if nb < 0:
-	# 			self.has_stock[need_name] = 0
-	# 			self.updateSubNeedStock({need_name: nb})
-	# 		else:
-	# 			self.has_stock[need_name] = nb
-	# 			del self.need_stock[need_name]
-	# 	else:
-	# 		self.instructions.append(chosen_process.name) #ici frero
-	# 		self.updateAddNeedStock(chosen_process.need)
-	# 		self.updateSubNeedStock(chosen_process.result)
 
 	def selectProcess(self, need_name, need_quantity, lst_process):
 		if (need_name in list(self.has_stock.keys())) and need_quantity != -1:
@@ -52,15 +36,20 @@ class Child:
 			if not lst_possible_process:
 				return False
 			chosen_process = choice(lst_possible_process)
-			self.instructions.append(chosen_process.name) #ici frero
+			self.appendProcess(need_name, need_quantity, chosen_process)
 			#print('chosen_process.need:', chosen_process.need)
 			#print('self.need_stock:', self.need_stock)
-			self.updateSubNeedStock(chosen_process.result)
-			self.updateAddNeedStock(chosen_process.need)
 		return True
 
-	# def updateHasStock(self, need_name, need_quantity):
-
+	def appendProcess(self, need_name, need_quantity, chosen_process):
+		nb = 1 if need_quantity == -1 else ceil(need_quantity / chosen_process.result[need_name])
+		for i in range(nb):
+			# print('nb:', nb, i)
+			self.instructions.append(chosen_process.name)
+			self.updateSubNeedStock(chosen_process.result)
+			self.updateAddNeedStock(chosen_process.need)
+		# if need_quantity == -1:
+		# 	print('ici:',self.instructions)
 
 	def updateAddNeedStock(self, items):
 		for elt in items:
@@ -76,10 +65,6 @@ class Child:
 			except KeyError:
 				self.need_stock[elt] = -items[elt]
 			if self.need_stock[elt] <= 0:
-				try:
-					self.has_stock[elt] -= self.need_stock[elt]
-				except KeyError:
-					self.has_stock[elt] = -self.need_stock[elt]
 				del self.need_stock[elt]
 
 	def listPossibleProcess(self, need_name, lst_process): # need_quantity: unsigned int zith -1 for start (tranfromed into max uint=2*217183647 + 1)
@@ -91,10 +76,3 @@ class Child:
 		# 	lst_possible_process.append({'name': 'take_from_stock'})
 		# 	print('lst_possible_process:', lst_possible_process[0].name)
 		return lst_possible_process
-
-# 	def remplirBesoin(self):
-# 		#choisir aleatoirement quel process pour remplir besoin
-# 		#update need_stock (retirer cause de la fonction, ajouter cout)
-# 		#ajouter process a liste d'instructions
-# 		#si pas possible de remplir le besoin, l'enfant est con et moche donc stop
-# 		pass

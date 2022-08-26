@@ -20,12 +20,18 @@ class Process:
 		match2 = findall(r'(\((\w+:\d+;?)+\))?:', line)
 		need = match2[1][0]
 		for elt in sub(r'[\(\)]', '', need).split(';'):
-			i, val = elt.split(':')
-			self.need[i] = int(val)
+			try:
+				i, val = elt.split(':')
+				self.need[i] = int(val)
+			except ValueError:
+				pass
 		result = match2[2][0]
 		for elt in sub(r'[\(\)]', '', result).split(';'):
-			i, val = elt.split(':')
-			self.result[i] = int(val)
+			try:
+				i, val = elt.split(':')
+				self.result[i] = int(val)
+			except ValueError:
+				pass
 		match3 = findall(r':\d+$', line)
 		self.delay = int(match3[0][1:])
 
@@ -69,12 +75,81 @@ class Krpsim:
 				error('bad_file')
 
 	def process(self):
-		child = Child(self.stock, self.lst_process, self.optimize)
-		print('instructions:', child.instructions)
+		# child = Child(self.stock, self.lst_process, self.optimize)
+		for elt in range(10000):
+			child = Child(self.stock, self.lst_process, self.optimize)
+			print('instructions:', child.instructions)
 		delta_time = time() - self.start_time
 		if delta_time > self.max_time:
 			print(delta_time)
 			exit(1)
+		return child
+
+	def postProcess(self, child):
+		dict_tmp = dict()
+		for instruction in child.instructions:
+			try:
+				dict_tmp[instruction] += 1
+			except KeyError:
+				dict_tmp[instruction] = 1
+		# print('dict_tmp:', dict_tmp)
+		cycle = 0
+		lst_possible_processes = self.listPossibleProcesses(dict_tmp)
+		self.instructions_good = list([cycle, lst_possible_processes])
+		lst_todo = self.updateTodo(cycle, lst_possible_processes, dict())
+		while lst_todo:
+			cycle = sorted([int(index) for index in lst_todo.keys()])[0];
+			self.updateAddStock(lst_todo[cycle])
+			del lst_todo[cycle]
+			lst_possible_processes = self.listPossibleProcesses(dict_tmp)
+			self.instructions_good.append([cycle, lst_possible_processes])
+			lst_todo = self.updateTodo(cycle, lst_possible_processes, lst_todo)
+		# print('instructions_good', self.instructions_good)
+		# print('stock:', self.stock)
+
+	def updateAddStock(self, todo):
+		for process_hash in todo:
+			for key, value in self.lst_process[process_hash].result.items():
+				try:
+					self.stock[key] += value
+				except KeyError:
+					self.stock[key] = value
+
+	def listPossibleProcesses(self, dict_tmp):
+		keys = list(dict_tmp.keys())
+		processes_cycle = list()
+		for key in keys:
+			if self.processIsPossible(key, dict_tmp[key], processes_cycle):
+				del dict_tmp[key]
+		return processes_cycle
+
+	def processIsPossible(self, process_name, process_quantity, processes_cycle):
+		tmp = process_quantity
+		for i in range(tmp):
+			tmp = self.stock.copy()
+			for elt in self.lst_process[process_name].need:
+				try:
+					if self.stock[elt] < self.lst_process[process_name].need[elt]:
+						return False
+				except KeyError:
+					return False
+				tmp[elt] -= self.lst_process[process_name].need[elt]
+			self.stock = tmp
+			processes_cycle.append(process_name)
+			process_quantity -= 1
+		return True
+
+	def updateTodo(self, cycle, actions, lst_todo):
+		for action in actions:
+			try:
+				lst_todo[cycle+self.lst_process[action].delay].append(action)
+			except KeyError:
+				lst_todo[cycle+self.lst_process[action].delay] = [action]
+		return lst_todo
+
+
+
+
 
 	def print(self):
 		print('Stock :', self.stock)
@@ -84,9 +159,10 @@ class Krpsim:
 def main():
 	krpsim = Krpsim(time())
 	krpsim.parser()
-	krpsim.process()
+	child = krpsim.process()
+	krpsim.postProcess(child)
 	# krpsim.print()
-	print('time:', time() - krpsim.start_time)
+	# print('time:', time() - krpsim.start_time)
 	exit(0)
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ from random import choice
 
 class Child:
 	def __init__(self, start_stock, lst_process, optimize):
-		self.has_stock = start_stock.copy() #penser a stocker exces achat ici ex. buy oeuf
+		self.has_stock = start_stock.copy()
 		self.need_stock = dict()
 		self.instructions = list()
 		self.score = int()
@@ -14,7 +14,6 @@ class Child:
 		self.selectProcess(self.optimize, -1, lst_process)#init besoin et instructions
 		while self.need_stock != {}:
 			# print(self.instructions, self.need_stock)
-			# print(self.need_stock)
 			name1 = list(self.need_stock.keys())[0]
 			if not self.selectProcess(name1, self.need_stock[name1], lst_process):
 				print('Enfant con!')
@@ -76,10 +75,6 @@ class Child:
 			except KeyError:
 				self.need_stock[elt] = -items[elt]
 			if self.need_stock[elt] <= 0:
-				try:
-					self.has_stock[elt] -= self.need_stock[elt]
-				except KeyError:
-					self.has_stock[elt] = -self.need_stock[elt]
 				del self.need_stock[elt]
 
 	def listPossibleProcess(self, need_name, lst_process): # need_quantity: unsigned int zith -1 for start (tranfromed into max uint=2*217183647 + 1)

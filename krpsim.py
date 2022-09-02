@@ -13,7 +13,6 @@ class Process:
 		self.delay = int()
 		self.save(line)
 
-	#CHECK RECRE FILE DON'T WORK
 	def save(self, line):
 		match1 = match(r'\w+', line)
 		self.name = match1.group(0)
@@ -40,6 +39,7 @@ class Process:
 		print('need: %s' % self.need)
 		print('result:', self.result)
 		print('delay: %s\n' % self.delay)
+
 
 class Krpsim:
 	def __init__(self, start_time):
@@ -75,17 +75,17 @@ class Krpsim:
 				error('bad_file')
 
 	def process(self):
+		child = Child(self.stock, self.optimize, self.lst_process)
+		# for elt in range(10000):
 		# child = Child(self.stock, self.lst_process, self.optimize)
-		for elt in range(10000):
-			child = Child(self.stock, self.lst_process, self.optimize)
-			print('instructions:', child.instructions)
+		# print('instructions:', child.instructions)
 		delta_time = time() - self.start_time
 		if delta_time > self.max_time:
 			print(delta_time)
 			exit(1)
 		return child
 
-	def postProcess(self, child):
+	def post_process(self, child):
 		dict_tmp = dict()
 		for instruction in child.instructions:
 			try:
@@ -94,20 +94,21 @@ class Krpsim:
 				dict_tmp[instruction] = 1
 		# print('dict_tmp:', dict_tmp)
 		cycle = 0
-		lst_possible_processes = self.listPossibleProcesses(dict_tmp)
+		lst_possible_processes = self.list_possible_processes(dict_tmp)
 		self.instructions_good = list([cycle, lst_possible_processes])
-		lst_todo = self.updateTodo(cycle, lst_possible_processes, dict())
+		lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
 		while lst_todo:
-			cycle = sorted([int(index) for index in lst_todo.keys()])[0];
-			self.updateAddStock(lst_todo[cycle])
+			cycle = sorted([int(index) for index in lst_todo.keys()])[0]
+			for elt in lst_todo[cycle]:
+				self.update_add_stock(self.lst_process[elt].need)
 			del lst_todo[cycle]
-			lst_possible_processes = self.listPossibleProcesses(dict_tmp)
+			lst_possible_processes = self.list_possible_processes(dict_tmp)
 			self.instructions_good.append([cycle, lst_possible_processes])
-			lst_todo = self.updateTodo(cycle, lst_possible_processes, lst_todo)
-		# print('instructions_good', self.instructions_good)
-		# print('stock:', self.stock)
+			lst_todo = self.update_todo(cycle, lst_possible_processes, lst_todo)
+		print('instructions_good', self.instructions_good)
+		print('stock:', self.stock)
 
-	def updateAddStock(self, todo):
+	def update_add_stock(self, todo):
 		for process_hash in todo:
 			for key, value in self.lst_process[process_hash].result.items():
 				try:
@@ -115,15 +116,15 @@ class Krpsim:
 				except KeyError:
 					self.stock[key] = value
 
-	def listPossibleProcesses(self, dict_tmp):
+	def list_possible_processes(self, dict_tmp):
 		keys = list(dict_tmp.keys())
 		processes_cycle = list()
 		for key in keys:
-			if self.processIsPossible(key, dict_tmp[key], processes_cycle):
+			if self.process_is_possible(key, dict_tmp[key], processes_cycle):
 				del dict_tmp[key]
 		return processes_cycle
 
-	def processIsPossible(self, process_name, process_quantity, processes_cycle):
+	def process_is_possible(self, process_name, process_quantity, processes_cycle):
 		tmp = process_quantity
 		for i in range(tmp):
 			tmp = self.stock.copy()
@@ -139,31 +140,29 @@ class Krpsim:
 			process_quantity -= 1
 		return True
 
-	def updateTodo(self, cycle, actions, lst_todo):
+	def update_todo(self, cycle, actions, lst_todo):
 		for action in actions:
 			try:
-				lst_todo[cycle+self.lst_process[action].delay].append(action)
+				lst_todo[cycle + self.lst_process[action].delay].append(action)
 			except KeyError:
-				lst_todo[cycle+self.lst_process[action].delay] = [action]
+				lst_todo[cycle + self.lst_process[action].delay] = [action]
 		return lst_todo
-
-
-
-
 
 	def print(self):
 		print('Stock :', self.stock)
 		for i, elt in self.lst_process.items():
 			elt.print()
 
+
 def main():
 	krpsim = Krpsim(time())
 	krpsim.parser()
 	child = krpsim.process()
-	krpsim.postProcess(child)
+	krpsim.post_process(child)
 	# krpsim.print()
 	# print('time:', time() - krpsim.start_time)
 	exit(0)
+
 
 if __name__ == '__main__':
 	main()

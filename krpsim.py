@@ -99,8 +99,7 @@ class Krpsim:
 		lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
 		while lst_todo:
 			cycle = sorted([int(index) for index in lst_todo.keys()])[0]
-			for elt in lst_todo[cycle]:
-				self.update_add_stock(self.lst_process[elt].need)
+			self.update_add_stock(lst_todo[cycle])
 			del lst_todo[cycle]
 			lst_possible_processes = self.list_possible_processes(dict_tmp)
 			self.instructions_good.append([cycle, lst_possible_processes])

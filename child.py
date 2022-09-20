@@ -20,7 +20,7 @@ class Child:
         self.loop = True
         self.len_cycle = int(max_cycle)
         self.get_instructions(lst_process)
-        print(self.dict_instructions)
+        # print(self.dict_instructions)
         self.post_process()
         self.get_score(start_stock)
 
@@ -37,7 +37,7 @@ class Child:
             self.score = 0
         for key in start_stock:
             # check stock for steak/inception < or <=
-            if not self.post_stock[key] or self.post_stock[key] <= start_stock[key]:
+            if not self.post_stock[key] or self.post_stock[key] < start_stock[key] or not self.instructions_good[1]:
                 self.loop = False
         # print('created', self.created)
         # print("last cycle: ", self.instructions_good[-1][0])
@@ -159,7 +159,7 @@ class Child:
                     self.dict_instructions[chosen_process.name] = 1
                 self.update_add_need_stock(chosen_process.need)
                 self.update_sub_need_stock(chosen_process.result)
-                # self.len_cycle -= 1
+                self.len_cycle -= 1
             # print(chosen_process.name)
             # print('chosen_process.need:', chosen_process.need)
             # print('self.need_stock:', self.need_stock)

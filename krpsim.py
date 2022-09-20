@@ -53,24 +53,25 @@ class Krpsim:
         # print(child.post_stock)
         child = Child(self.stock, self.optimize,
                       self.lst_process, self.max_cycle)
-        # for _ in range(10):
-        #     new_child = Child(self.stock, self.optimize,
-        #                       self.lst_process, self.max_cycle)
-        #     if new_child.loop > child.loop:
-        #         child = new_child
-        #     elif new_child.loop == child.loop and new_child.score >= child.score:
-        #         if new_child.score == child.score and new_child.created <= child.created:
-        #             pass
-        #         else:
-        #             child = new_child
-        #     delta_time = time() - self.start_time
-        #     if delta_time > self.max_time:
-        #         print(child)
-        #         print(delta_time)
-        #         exit(1)
+        for _ in range(100):
+            new_child = Child(self.stock, self.optimize,
+                              self.lst_process, self.max_cycle)
+            if new_child.loop > child.loop:
+                child = new_child
+            elif new_child.loop == child.loop and new_child.score >= child.score:
+                if new_child.score == child.score and new_child.created <= child.created:
+                    pass
+                else:
+                    child = new_child
+            delta_time = time() - self.start_time
+            if delta_time > self.max_time:
+                print(child)
+                print(delta_time)
+                exit(1)
         print("chosen instructions: ", child.instructions_good)
         print("chosen post_stock: ", child.post_stock)
         print("chosen score: ", child.score)
+        print("chosen loop: ", child.loop)
         return child
 
     def print(self):

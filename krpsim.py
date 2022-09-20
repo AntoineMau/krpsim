@@ -43,10 +43,10 @@ class Krpsim:
                 error('bad_file')
 
     def process(self):
-        child = Child(self.stock, self.optimize, self.lst_process)
-        # for elt in range(10000):
-        #     child = Child(self.stock, self.optimize, self.lst_process)
-        #     print('instructions:', child.instructions)
+        # child = Child(self.stock, self.optimize, self.lst_process, self.max_cycle)
+        for _ in range(1000):
+            child = Child(self.stock, self.optimize, self.lst_process, self.max_cycle)
+            # print('instructions:', child.instructions)
         delta_time = time() - self.start_time
         if delta_time > self.max_time:
             print(delta_time)
@@ -54,17 +54,19 @@ class Krpsim:
         return child
 
     def post_process(self, child):
+        # print("Instructions dbt post_process: ", child.instructions)
         dict_tmp = dict()
-        for instruction in child.instructions:
+        for instruction in reversed(child.instructions):
             try:
                 dict_tmp[instruction] += 1
             except KeyError:
                 dict_tmp[instruction] = 1
-        # print('dict_tmp:', dict_tmp)
+        print('dict_tmp:', dict_tmp)
         cycle = 0
         lst_possible_processes = self.list_possible_processes(dict_tmp)
         self.instructions_good = list([cycle, lst_possible_processes])
         lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
+
         while lst_todo:
             cycle = sorted([int(index) for index in lst_todo])[0]
             # self.update_add_stock(lst_todo[cycle])
@@ -82,24 +84,24 @@ class Krpsim:
         keys = list(dict_tmp.keys())
         processes_cycle = list()
         for key in keys:
-            if self.process_is_possible(key, dict_tmp[key], processes_cycle):
-                del dict_tmp[key]
+            while dict_tmp[key] != 0:
+                if self.process_is_possible(key):
+                    processes_cycle.append(key)
+                    dict_tmp[key] -= 1
+                else:
+                    break
         return processes_cycle
 
-    def process_is_possible(self, process_name, process_quantity, processes_cycle):
-        tmp = process_quantity
-        for _ in range(tmp):
-            tmp = self.stock.copy()
-            for elt in self.lst_process[process_name].need:
-                try:
-                    if self.stock[elt] < self.lst_process[process_name].need[elt]:
-                        return False
-                except KeyError:
+    def process_is_possible(self, process_name):
+        tmp = self.stock.copy()
+        for elt in self.lst_process[process_name].need:
+            try:
+                if self.stock[elt] < self.lst_process[process_name].need[elt]:
                     return False
-                tmp[elt] -= self.lst_process[process_name].need[elt]
-            self.stock = tmp
-            processes_cycle.append(process_name)
-            process_quantity -= 1
+            except KeyError:
+                return False
+            tmp[elt] -= self.lst_process[process_name].need[elt]
+        self.stock = tmp
         return True
 
     def update_todo(self, cycle, actions, lst_todo):

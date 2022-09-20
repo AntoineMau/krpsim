@@ -16,6 +16,7 @@ class Krpsim:
         self.lst_process = dict()
         self.optimize = str()
         self.instructions_good = []
+        self.children = list()
 
     def parser(self):
         parser = ArgumentParser()
@@ -43,81 +44,34 @@ class Krpsim:
                 error('bad_file')
 
     def process(self):
-        # child = Child(self.stock, self.optimize, self.lst_process, self.max_cycle)
-        for _ in range(1000):
-            child = Child(self.stock, self.optimize, self.lst_process, self.max_cycle)
-            # print('instructions:', child.instructions)
-        delta_time = time() - self.start_time
-        if delta_time > self.max_time:
-            print(delta_time)
-            exit(1)
+        # for i in range(1000):
+        #     child = Child(self.stock, self.optimize,
+        #                   self.lst_process, self.max_cycle)
+        #     print(i)
+        # print("process fini")
+        # print("post_process: ", child.instructions_good)
+        # print(child.post_stock)
+        child = Child(self.stock, self.optimize,
+                      self.lst_process, self.max_cycle)
+        # for _ in range(10):
+        #     new_child = Child(self.stock, self.optimize,
+        #                       self.lst_process, self.max_cycle)
+        #     if new_child.loop > child.loop:
+        #         child = new_child
+        #     elif new_child.loop == child.loop and new_child.score >= child.score:
+        #         if new_child.score == child.score and new_child.created <= child.created:
+        #             pass
+        #         else:
+        #             child = new_child
+        #     delta_time = time() - self.start_time
+        #     if delta_time > self.max_time:
+        #         print(child)
+        #         print(delta_time)
+        #         exit(1)
+        print("chosen instructions: ", child.instructions_good)
+        print("chosen post_stock: ", child.post_stock)
+        print("chosen score: ", child.score)
         return child
-
-    def post_process(self, child):
-        # print("Instructions dbt post_process: ", child.instructions)
-        dict_tmp = dict()
-        for instruction in reversed(child.instructions):
-            try:
-                dict_tmp[instruction] += 1
-            except KeyError:
-                dict_tmp[instruction] = 1
-        print('dict_tmp:', dict_tmp)
-        cycle = 0
-        lst_possible_processes = self.list_possible_processes(dict_tmp)
-        self.instructions_good = list([cycle, lst_possible_processes])
-        lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
-
-        while lst_todo:
-            cycle = sorted([int(index) for index in lst_todo])[0]
-            # self.update_add_stock(lst_todo[cycle])
-            for elt in lst_todo[cycle]:
-                self.update_add_stock(elt)
-            del lst_todo[cycle]
-            lst_possible_processes = self.list_possible_processes(dict_tmp)
-            self.instructions_good.append([cycle, lst_possible_processes])
-            lst_todo = self.update_todo(
-                cycle, lst_possible_processes, lst_todo)
-        print('instructions_good', self.instructions_good)
-        print('stock:', self.stock)
-
-    def list_possible_processes(self, dict_tmp):
-        keys = list(dict_tmp.keys())
-        processes_cycle = list()
-        for key in keys:
-            while dict_tmp[key] != 0:
-                if self.process_is_possible(key):
-                    processes_cycle.append(key)
-                    dict_tmp[key] -= 1
-                else:
-                    break
-        return processes_cycle
-
-    def process_is_possible(self, process_name):
-        tmp = self.stock.copy()
-        for elt in self.lst_process[process_name].need:
-            try:
-                if self.stock[elt] < self.lst_process[process_name].need[elt]:
-                    return False
-            except KeyError:
-                return False
-            tmp[elt] -= self.lst_process[process_name].need[elt]
-        self.stock = tmp
-        return True
-
-    def update_todo(self, cycle, actions, lst_todo):
-        for action in actions:
-            try:
-                lst_todo[cycle + self.lst_process[action].delay].append(action)
-            except KeyError:
-                lst_todo[cycle + self.lst_process[action].delay] = [action]
-        return lst_todo
-
-    def update_add_stock(self, todo):
-        for key, value in self.lst_process[todo].result.items():
-            try:
-                self.stock[key] += value
-            except KeyError:
-                self.stock[key] = value
 
     def print(self):
         print('Stock :', self.stock)
@@ -129,7 +83,7 @@ def main():
     krpsim = Krpsim(time())
     krpsim.parser()
     child = krpsim.process()
-    krpsim.post_process(child)
+    # krpsim.post_process(child)
     # krpsim.print()
     # print('time:', time() - krpsim.start_time)
     exit(0)

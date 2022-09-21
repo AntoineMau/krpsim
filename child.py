@@ -7,7 +7,7 @@ from random import choice, random
 
 
 class Child:
-    def __init__(self, start_stock, optimize, lst_process, max_cycle):
+    def __init__(self, start_stock, optimize, lst_process, max_cycle, max_instructions):
         self.lst_process = lst_process
         self.instructions_good = deque()
         self.post_stock = start_stock.copy()
@@ -15,12 +15,11 @@ class Child:
         self.need_stock = dict()
         self.dict_instructions = dict()
         self.optimize = optimize
-        self.score = int()  # to do, ici ou au dessus apres tri des processes ?
+        self.score = int()
         self.created = int()
         self.loop = True
-        self.len_cycle = int(max_cycle)
+        self.max_instructions = max_instructions
         self.get_instructions(lst_process)
-        # print(self.dict_instructions)
         self.post_process(max_cycle)
         self.get_score(start_stock)
 
@@ -30,38 +29,24 @@ class Child:
             self.created = self.post_stock[self.optimize]
         except KeyError:
             self.created = 0
-        # print("instructions_good: ", self.instructions_good)
         try:
             self.score = self.created / self.instructions_good[-1][0]
-        except IndexError:
+        except (IndexError, ZeroDivisionError):
             self.score = 0
         for key in start_stock:
-            # check stock for steak/inception < or <=
-            if not self.post_stock[key] \
-                or self.post_stock[key] < start_stock[key] \
-                    or not self.instructions_good[1]:
+            if self.post_stock[key] < start_stock[key] \
+                    or not self.instructions_good[0][1]:
                 self.loop = False
-        # print('created', self.created)
-        # print("last cycle: ", self.instructions_good[-1][0])
-        # print("score: ", self.score)
-        print("loop: ", self.loop)
-        # print(self.post_stock, "\n\n")
 
     def post_process(self, max_cycle):
-        # print(self.need_stock)
-        # print(self.dict_instructions)
-        # print("Instructions dbt post_process: ", child.instructions)
-        # print('self.dict_instructions:', self.dict_instructions)
         cycle = 0
         lst_possible_processes = self.list_possible_processes1(
             self.dict_instructions)
-        self.instructions_good = list([cycle, lst_possible_processes])
+        self.instructions_good = list([[cycle, lst_possible_processes]])
         lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
 
         while lst_todo and cycle <= max_cycle:
-            # print("cycle, max_cycle: ", cycle, max_cycle)
             cycle = sorted([int(index) for index in lst_todo])[0]
-            # self.update_add_stock(lst_todo[cycle])
             for elt in lst_todo[cycle]:
                 self.update_add_stock(elt)
             del lst_todo[cycle]
@@ -70,8 +55,6 @@ class Child:
             self.instructions_good.append([cycle, lst_possible_processes])
             lst_todo = self.update_todo(
                 cycle, lst_possible_processes, lst_todo)
-        # print('instructions_good', self.instructions_good)
-        # print('stock:', self.post_stock)
         return self.instructions_good
 
     def list_possible_processes1(self, dict_instructions):
@@ -82,7 +65,6 @@ class Child:
                 if self.process_is_possible(key):
                     processes_cycle.append(key)
                     dict_instructions[key] -= 1
-                    # print(dict_instructions[key])
                 else:
                     break
         return processes_cycle
@@ -90,10 +72,7 @@ class Child:
     def process_is_possible(self, process_name):
         tmp = self.post_stock.copy()
         for elt in self.lst_process[process_name].need:
-            try:
-                if self.post_stock[elt] < self.lst_process[process_name].need[elt]:
-                    return False
-            except KeyError:
+            if self.post_stock[elt] < self.lst_process[process_name].need[elt]:
                 return False
             tmp[elt] -= self.lst_process[process_name].need[elt]
         self.post_stock = tmp
@@ -109,42 +88,32 @@ class Child:
 
     def update_add_stock(self, todo):
         for key, value in self.lst_process[todo].result.items():
-            try:
-                self.post_stock[key] += value
-            except KeyError:
-                self.post_stock[key] = value
+            self.post_stock[key] += value
 
     # list all the processes necessary to create one or more "optimize" stock
     def get_instructions(self, lst_process):
         # initialize need_stock with stock to optimize before while loop
         self.select_process(self.optimize, -1, lst_process)
         while self.need_stock:
-            # print(self.dict_instructions, self.need_stock)
             need_name = list(self.need_stock.keys())[0]
             if not self.select_process(need_name, self.need_stock[need_name], lst_process):
-                # print("need_stock: ", self.need_stock)
-                # print('Enfant con!')  # ne pas oublier de supprimer
-                # print(self.dict_instructions)
                 break
-            # print(self.len_cycle)
-        # print(self.dict_instructions, self.need_stock)
 
     # select one of the available processes to fulfill one need
     def select_process(self, need_name, need_quantity, lst_process):
-        if (need_name in list(self.has_stock.keys())) and need_quantity != -1 \
-                and random() < 0.9 and self.len_cycle > 0:
+        if self.has_stock[need_name] != 0 and need_quantity != -1 \
+                and random() < 0.9 and self.max_instructions > 0:
             tmp_nb = self.has_stock[need_name] - need_quantity
             if tmp_nb < 0:
-                del self.has_stock[need_name]
+                self.has_stock[need_name] = 0
                 self.update_sub_need_stock({need_name: tmp_nb})
             else:
                 self.has_stock[need_name] = tmp_nb
-                # print(self.need_stock)
                 del self.need_stock[need_name]
         else:
             lst_possible_process = self.list_possible_process(
                 need_name, lst_process)
-            if not lst_possible_process or self.len_cycle <= 0:
+            if not lst_possible_process or self.max_instructions <= 0:
                 return False
             chosen_process = choice(lst_possible_process)
             try:
@@ -153,9 +122,10 @@ class Child:
                 self.dict_instructions[chosen_process.name] = 1
             self.update_add_need_stock(chosen_process.need)
             self.update_sub_need_stock(chosen_process.result)
-            while need_name in self.need_stock:
+            while need_name in self.need_stock and self.max_instructions > 0:
                 # print(chosen_process.name, self.need_stock[need_name])
                 if self.need_stock[need_name] >= need_quantity:
+                    self.max_instructions -= 1
                     break
                 try:
                     self.dict_instructions[chosen_process.name] += 1
@@ -163,10 +133,7 @@ class Child:
                     self.dict_instructions[chosen_process.name] = 1
                 self.update_add_need_stock(chosen_process.need)
                 self.update_sub_need_stock(chosen_process.result)
-                self.len_cycle -= 1
-            # print(chosen_process.name)
-            # print('chosen_process.need:', chosen_process.need)
-            # print('self.need_stock:', self.need_stock)
+                self.max_instructions -= 1
         return True
 
     # list available processes to fulfill the current need

@@ -29,10 +29,6 @@ class Process:
                 pass
         match3 = findall(r':\d+$', line)
         self.delay = int(match3[0][1:])
-        # self.print()
 
     def print(self):
-        print(f"name: {self.name}")
-        print(f"need: {self.need}")
-        print(f"result: {self.result}")
-        print(f"delay: {self.delay}\n")
+        return f'{self.name}: {self.need}: {self.result}: {self.delay}'

@@ -10,7 +10,8 @@ from process import Process
 class Krpsim:
     def __init__(self, start_time):
         self.max_cycle = int()
-        self.max_time = int()
+        self.max_time = float()
+        self.max_children = int()
         self.start_time = start_time
         self.stock = dict()
         self.lst_process = dict()
@@ -21,12 +22,15 @@ class Krpsim:
     def parser(self):
         parser = ArgumentParser()
         parser.add_argument('file', type=FileType('r'), help='file to process')
-        parser.add_argument('delay', type=int, help='max time to process')
+        parser.add_argument('delay', type=float, help='max time to process')
         parser.add_argument('-c', '--cycle', default=10000,
                             help='max number of cycle. default:10000')
+        parser.add_argument('-nb', '--number', default=1000,
+                            help='max number of children. default:1000')
         args = parser.parse_args()
-        self.max_cycle = args.cycle
+        self.max_cycle = float(args.cycle)
         self.max_time = args.delay
+        self.max_children = int(args.number)
         f = args.file.read()
         f = sub(r'#.*', '', f)
         for elt in f.split('\n'):
@@ -44,16 +48,12 @@ class Krpsim:
                 error('bad_file')
 
     def process(self):
-        # for i in range(1000):
-        #     child = Child(self.stock, self.optimize,
-        #                   self.lst_process, self.max_cycle)
-        #     print(i)
-        # print("process fini")
-        # print("post_process: ", child.instructions_good)
-        # print(child.post_stock)
         child = Child(self.stock, self.optimize,
                       self.lst_process, self.max_cycle)
-        for _ in range(100):
+        for _ in range(self.max_children - 1):
+            delta_time = time() - self.start_time
+            if delta_time > self.max_time:
+                break
             new_child = Child(self.stock, self.optimize,
                               self.lst_process, self.max_cycle)
             if new_child.loop > child.loop:
@@ -63,15 +63,11 @@ class Krpsim:
                     pass
                 else:
                     child = new_child
-            delta_time = time() - self.start_time
-            if delta_time > self.max_time:
-                print(child)
-                print(delta_time)
-                exit(1)
         print("chosen instructions: ", child.instructions_good)
         print("chosen post_stock: ", child.post_stock)
         print("chosen score: ", child.score)
         print("chosen loop: ", child.loop)
+        print("delta_time: ", delta_time)
         return child
 
     def print(self):

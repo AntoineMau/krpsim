@@ -21,7 +21,7 @@ class Child:
         self.len_cycle = int(max_cycle)
         self.get_instructions(lst_process)
         # print(self.dict_instructions)
-        self.post_process()
+        self.post_process(max_cycle)
         self.get_score(start_stock)
 
     def get_score(self, start_stock):
@@ -37,7 +37,9 @@ class Child:
             self.score = 0
         for key in start_stock:
             # check stock for steak/inception < or <=
-            if not self.post_stock[key] or self.post_stock[key] < start_stock[key] or not self.instructions_good[1]:
+            if not self.post_stock[key] \
+                or self.post_stock[key] < start_stock[key] \
+                    or not self.instructions_good[1]:
                 self.loop = False
         # print('created', self.created)
         # print("last cycle: ", self.instructions_good[-1][0])
@@ -45,7 +47,7 @@ class Child:
         print("loop: ", self.loop)
         # print(self.post_stock, "\n\n")
 
-    def post_process(self):
+    def post_process(self, max_cycle):
         # print(self.need_stock)
         # print(self.dict_instructions)
         # print("Instructions dbt post_process: ", child.instructions)
@@ -56,7 +58,8 @@ class Child:
         self.instructions_good = list([cycle, lst_possible_processes])
         lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
 
-        while lst_todo:
+        while lst_todo and cycle <= max_cycle:
+            # print("cycle, max_cycle: ", cycle, max_cycle)
             cycle = sorted([int(index) for index in lst_todo])[0]
             # self.update_add_stock(lst_todo[cycle])
             for elt in lst_todo[cycle]:
@@ -69,7 +72,7 @@ class Child:
                 cycle, lst_possible_processes, lst_todo)
         # print('instructions_good', self.instructions_good)
         # print('stock:', self.post_stock)
-        return (self.instructions_good)
+        return self.instructions_good
 
     def list_possible_processes1(self, dict_instructions):
         keys = reversed(list(dict_instructions.keys()))
@@ -128,7 +131,8 @@ class Child:
 
     # select one of the available processes to fulfill one need
     def select_process(self, need_name, need_quantity, lst_process):
-        if (need_name in list(self.has_stock.keys())) and need_quantity != -1 and random() < 0.9 and self.len_cycle > 0:
+        if (need_name in list(self.has_stock.keys())) and need_quantity != -1 \
+                and random() < 0.9 and self.len_cycle > 0:
             tmp_nb = self.has_stock[need_name] - need_quantity
             if tmp_nb < 0:
                 del self.has_stock[need_name]

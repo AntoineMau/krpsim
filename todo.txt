@@ -1,0 +1,10 @@
+progress bar pour enfants
+créer sortie fichier : stock, processes, optimize
+    - lire stocks au début pour affichage
+    - relier fonction sortie à timeout
+    - écrire dans sortie jusqu'à timeout
+options pour régler le nombre d'enfant / nombre de cycles max / nombre d'instructions
+programme de vérification
+bad file (eaception) ?
+même si pas loop, continuer jusqu'à épuisement des stocks (mtrazzi)
+implementer limite cycles :'(

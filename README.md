@@ -7,6 +7,7 @@
   * [Normal](#normal)
   * [Cycles](#cycles)
   * [Instructions](#instructions)
+  * [Visual](#visual)
 * [Plus info](#plus-info)
   
 ## Introduction
@@ -97,6 +98,30 @@ Stock:
  boite => 0
 
 time: 0.09298419952392578</code></pre>
+  
+### Visual
+<pre><code>$ python3 krpsim.py resources/pomme 3 -v
+Nice file ! 18 processes, 16 stocks, 1 to optimize
+
+Making children ████████████████████████████████ 100%
+
+Main walk
+0:buy_beurre
+0:buy_farine
+[...]
+9827:do_boite
+9828:vente_boite
+
+# No more proces doable at cycle 9859
+
+Stock:
+ four => 10
+ euro => 298000
+ [...]
+ flan => 0
+ boite => 0
+
+time: 0.9811151027679443</code></pre>
   
 ## Plus info
 **Autor:** [Antoine Mauffret](https://github.com/AntoineMau) [Martin de Lagarde](https://github.com/Martydl)  

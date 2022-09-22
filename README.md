@@ -3,6 +3,10 @@
 * [Introduction](#introduction)
 * [Python Requirements](#python-requirements)
 * [Utilisation](#utilisation)
+* [Exemples](#exemples)
+  * [Normal](#normal)
+  * [Cycles](#cycles)
+  * [Instructions](#instructions)
 * [Plus info](#plus-info)
   
 ## Introduction
@@ -20,19 +24,79 @@ d’un graphe en fait) de processus, en maximisant un résultat, et/ou en rédui
 le plus possible.  
   
 ## Python Requirements
-**install requirements:** <code>$ python3 -m pip install -r requirements.txt</code>  
+**install requirements:** <code>$ pip3 install -r requirements.txt</code>  
   
 ## Utilisation
-<pre><code>usage: krpsim.py [-h] [-c CYCLE] file delay
+<pre><code>usage: krpsim.py [-h] [-cy CYCLE] [-ch CHILDREN] [-in INSTRUCTIONS] [-v] file delay
 
 positional arguments:
-  file                  file to process
+  file                  file to optimize
   delay                 max time to process
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -c CYCLE, --cycle CYCLE
-                        max number of cycle. default:10000</code></pre>  
+  -cy CYCLE, --cycle CYCLE
+                        max number of cycle. default:10000
+  -ch CHILDREN, --children CHILDREN
+                        max number of children. default:1000
+  -in INSTRUCTIONS, --instructions INSTRUCTIONS
+                        max number of instructions allowed during child generation. default:10000
+  -v, --visual          Print instructions list after execution</code></pre>
+  
+## Exemples
+### Normal
+<pre><code>$ python3 krpsim.py resources/pomme 2
+Nice file ! 18 processes, 16 stocks, 1 to optimize
+
+Making children ████████████████████████████████ 100%
+
+Main walk
+# No more proces doable at cycle 9859
+
+Stock:
+ four => 10
+ euro => 298000
+ [...]
+ flan => 0
+ boite => 0
+
+time: 1.0594453811645508</code></pre>
+  
+### Cycles
+<pre><code>$ python3 krpsim.py resources/pomme 3 -cy 1000
+Nice file ! 18 processes, 16 stocks, 1 to optimize
+
+Making children ████████████████████████████████ 100%
+
+Main walk
+# No more proces doable at cycle 533
+
+Stock:
+ four => 10
+ euro => 10400
+ [...]
+ flan => 0
+ boite => 0
+
+time: 0.8958723545074463</code></pre>
+  
+### Instructions
+<pre><code>$ python3 krpsim.py resources/pomme 3 -in 100
+Nice file ! 18 processes, 16 stocks, 1 to optimize
+
+Making children ████████████████████████████████ 100%
+
+Main walk
+# No more proces doable at cycle 9577
+
+Stock:
+ four => 10
+ euro => 17200
+ [...]
+ flan => 0
+ boite => 0
+
+time: 0.09298419952392578</code></pre>
   
 ## Plus info
 **Autor:** [Antoine Mauffret](https://github.com/AntoineMau) [Martin de Lagarde](https://github.com/Martydl)  

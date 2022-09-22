@@ -2,15 +2,13 @@ from argparse import ArgumentParser, FileType
 from csv import reader
 from utils import print_stock, read_file, update_add_stock, update_sub_stock, error_verif
 
-#  krpsimVerif <file> <result_to_test>
-
 
 class KrpsimVerif:
     def __init__(self):
         self.stock = dict()
-        self.instructions = list()
-        self.optimize = str()
         self.lst_process = dict()
+        self.optimize = str()
+        self.instructions = list()
         self.todo = dict()
 
     def parsing(self):
@@ -38,9 +36,11 @@ class KrpsimVerif:
             update_sub_stock(
                 self.lst_process[instruction[1]].need, self.stock)
             self.verif_stock(instruction[1], cycle)
-            self.update_add_todo(cycle, instruction[1])
+            self.update_add_todo(
+                cycle + self.lst_process[instruction[1]].delay, instruction[1])
+        cycle += self.lst_process[self.instructions[-1][1]].delay
         self.update_del_todo(cycle)
-        print("Simulation complete, no error detected\n")
+        print(f"Simulation complete at cycle {cycle}, no error detected\n")
         print_stock(self.stock)
 
     def update_add_todo(self, cycle, instruction):

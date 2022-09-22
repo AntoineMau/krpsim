@@ -9,17 +9,17 @@ from utils import update_add_stock, update_sub_need_stock
 
 class Child:
     def __init__(self, start_stock, optimize, lst_process, max_cycle, max_instructions):
+        self.optimize = optimize
         self.lst_process = lst_process
-        self.instructions_good = deque()
-        self.post_stock = start_stock.copy()
+        self.max_instructions = max_instructions
         self.has_stock = start_stock.copy()
+        self.post_stock = start_stock.copy()
         self.need_stock = dict()
         self.dict_instructions = dict()
-        self.optimize = optimize
+        self.instructions_good = deque()
         self.score = int()
         self.created = int()
         self.loop = True
-        self.max_instructions = max_instructions
         self.get_instructions(lst_process)
         self.post_process(max_cycle)
         self.get_score(start_stock)
@@ -41,7 +41,7 @@ class Child:
 
     def post_process(self, max_cycle):
         cycle = 0
-        lst_possible_processes = self.list_possible_processes1(
+        lst_possible_processes = self.list_possible_processes_post(
             self.dict_instructions)
         self.instructions_good = list([[cycle, lst_possible_processes]])
         lst_todo = self.update_todo(cycle, lst_possible_processes, dict())
@@ -51,14 +51,14 @@ class Child:
             for elt in lst_todo[cycle]:
                 update_add_stock(self.lst_process[elt].result, self.post_stock)
             del lst_todo[cycle]
-            lst_possible_processes = self.list_possible_processes1(
+            lst_possible_processes = self.list_possible_processes_post(
                 self.dict_instructions)
             self.instructions_good.append([cycle, lst_possible_processes])
             lst_todo = self.update_todo(
                 cycle, lst_possible_processes, lst_todo)
         return self.instructions_good
 
-    def list_possible_processes1(self, dict_instructions):
+    def list_possible_processes_post(self, dict_instructions):
         keys = reversed(list(dict_instructions.keys()))
         processes_cycle = list()
         for key in keys:

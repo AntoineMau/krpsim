@@ -46,6 +46,8 @@ def read_file(document, stock, lst_process):
             opti = findall(r'\w+\)$', elt)[0][:-1]
         else:
             error('bad_file')
+    if opti not in stock:
+        error('bad_file')
     return opti
 
 

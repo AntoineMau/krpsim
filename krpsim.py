@@ -8,17 +8,16 @@ from child import Child
 
 class Krpsim:
     def __init__(self, start_time):
-        self.max_cycle = int()
         self.max_time = float()
+        self.max_cycle = int()
         self.max_children = int()
         self.max_instructions = int()
-        self.start_time = start_time
+        self.visual = bool()
         self.stock = dict()
         self.lst_process = dict()
         self.optimize = str()
         self.instructions_good = []
-        self.children = list()
-        self.visual = bool()
+        self.start_time = start_time
 
     def parser(self):
         parser = ArgumentParser()
@@ -44,22 +43,18 @@ class Krpsim:
             error('bad_number_children')
         self.optimize = read_file(args.file, self.stock, self.lst_process)
 
-    def tamere_en(self, tab):
-        for i in tab.keys():
-            if i not in self.stock:
-                self.stock[i] = 0
-
     def process(self):
         delta_time = time() - self.start_time
         progress_bar = ProgressBar('Making children',
                                    max=self.max_children, suffix='%(percent)d%%')
+        progress_bar.next()
         child = Child(self.stock, self.optimize,
                       self.lst_process, self.max_cycle, self.max_instructions)
-        progress_bar.next()
         for _ in range(self.max_children - 1):
             delta_time = time() - self.start_time
             if delta_time > self.max_time:
                 break
+            progress_bar.next()
             new_child = Child(self.stock, self.optimize,
                               self.lst_process, self.max_cycle, self.max_instructions)
             if new_child.loop > child.loop:
@@ -69,7 +64,6 @@ class Krpsim:
                     pass
                 else:
                     child = new_child
-            progress_bar.next()
         progress_bar.finish()
         print('')
         return child
@@ -82,17 +76,18 @@ class Krpsim:
     def print_result(self, child):
         print('Main walk')
         result = str()
-        diff_stock = self.fundy_diff_stock(child)
+        diff_stock = self.diff_stock(child)
         i = 0
-        while child.instructions_good[-1][0] * (i+1) <= self.max_cycle \
-                and self.funky_stock(diff_stock):
+        while child.instructions_good[0][1] \
+            and child.instructions_good[-1][0] * (i+1) <= self.max_cycle \
+                and self.update_stock(diff_stock):
             for cycle in child.instructions_good:
                 for elt in cycle[1]:
                     result += f'{cycle[0] + child.instructions_good[-1][0]*i}:{elt}\n'
+            i += 1
             delta_time = time() - self.start_time
             if delta_time > self.max_time:
                 break
-            i += 1
         end_time = time() - self.start_time
         file = open('instructions.csv', 'w', encoding='utf-8')
         file.write(result)
@@ -104,14 +99,14 @@ class Krpsim:
         print_stock(self.stock)
         print('time:', end_time)
 
-    def fundy_diff_stock(self, child):
+    def diff_stock(self, child):
         diff_stock = dict()
         for elt in self.stock.items():
             if child.post_stock[elt[0]] - elt[1] != 0:
                 diff_stock[elt[0]] = child.post_stock[elt[0]] - elt[1]
         return diff_stock
 
-    def funky_stock(self, diff_stock):
+    def update_stock(self, diff_stock):
         for elt in diff_stock.items():
             if self.stock[elt[0]] + elt[1] < 0:
                 return False

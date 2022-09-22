@@ -1,12 +1,9 @@
 from argparse import ArgumentParser, FileType
 from ctypes import c_uint
-from re import findall, match, sub
 from time import time
 from progress.bar import ChargingBar as ProgressBar
-from utils import error
-
+from utils import error, print_stock, read_file
 from child import Child
-from process import Process
 
 
 class Krpsim:
@@ -25,7 +22,8 @@ class Krpsim:
 
     def parser(self):
         parser = ArgumentParser()
-        parser.add_argument('file', type=FileType('r'), help='file to process')
+        parser.add_argument('file', type=FileType('r'),
+                            help='file to optimize')
         parser.add_argument('delay', type=float, help='max time to process')
         parser.add_argument('-cy', '--cycle', default=10000,
                             help='max number of cycle. default:10000')
@@ -44,23 +42,7 @@ class Krpsim:
         self.max_children = int(args.children)
         if self.max_children < 1:
             error('bad_number_children')
-        file = args.file.read()
-        file = sub(r'#.*', '', file)
-        for elt in file.split('\n'):
-            if elt == '\n' or elt == '':
-                pass
-            elif match(r'^\w+:\d+$', elt):
-                i, val = elt.split(':')
-                self.stock[i] = int(val)
-            elif match(r'^\w+:(\((\w+:\d+;?)+\))?:(\((\w+:\d+;?)+\))?:\d+$', elt):
-                process = Process(elt)
-                self.lst_process[process.name] = process
-                self.tamere_en(process.need)
-                self.tamere_en(process.result)
-            elif match(r'^optimize:\((\w+;?)+\)$', elt):
-                self.optimize = findall(r'\w+\)$', elt)[0][:-1]
-            else:
-                error('bad_file')
+        self.optimize = read_file(args.file, self.stock, self.lst_process)
 
     def tamere_en(self, tab):
         for i in tab.keys():
@@ -94,13 +76,8 @@ class Krpsim:
 
     def print_parsing(self):
         print(
-            f'Nice file ! {len(self.lst_process)} processes, {len(self.stock)} stocks, {len([self.optimize])} to optimize\n')
-
-    def print_stock(self, stock):
-        print('Stock:')
-        for elt in stock.items():
-            print(f' {elt[0]} => {elt[1]}')
-        print('')
+            (f'Nice file ! {len(self.lst_process)} processes, {len(self.stock)} stocks, '
+                f'{len([self.optimize])} to optimize\n'))
 
     def print_result(self, child):
         print('Main walk')
@@ -124,7 +101,7 @@ class Krpsim:
             print(result)
         print(
             f'# No more proces doable at cycle {child.instructions_good[-1][0]*i + 1}\n')
-        self.print_stock(self.stock)
+        print_stock(self.stock)
         print('time:', end_time)
 
     def fundy_diff_stock(self, child):

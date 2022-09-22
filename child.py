@@ -1,5 +1,6 @@
 from collections import deque
 from random import choice, random
+from utils import update_add_stock, update_sub_need_stock
 
 # Create one individual, i.e. a chain of processes that completes the creation
 # of one or more stock to optimize
@@ -48,7 +49,7 @@ class Child:
         while lst_todo and cycle <= max_cycle:
             cycle = sorted([int(index) for index in lst_todo])[0]
             for elt in lst_todo[cycle]:
-                self.update_add_stock(elt)
+                update_add_stock(self.lst_process[elt].result, self.post_stock)
             del lst_todo[cycle]
             lst_possible_processes = self.list_possible_processes1(
                 self.dict_instructions)
@@ -86,10 +87,6 @@ class Child:
                 lst_todo[cycle + self.lst_process[action].delay] = [action]
         return lst_todo
 
-    def update_add_stock(self, todo):
-        for key, value in self.lst_process[todo].result.items():
-            self.post_stock[key] += value
-
     # list all the processes necessary to create one or more "optimize" stock
     def get_instructions(self, lst_process):
         # initialize need_stock with stock to optimize before while loop
@@ -106,12 +103,13 @@ class Child:
             tmp_nb = self.has_stock[need_name] - need_quantity
             if tmp_nb < 0:
                 self.has_stock[need_name] = 0
-                self.update_sub_need_stock({need_name: tmp_nb})
+                update_sub_need_stock(
+                    {need_name: tmp_nb}, self.has_stock, self.need_stock)
             else:
                 self.has_stock[need_name] = tmp_nb
                 del self.need_stock[need_name]
         else:
-            lst_possible_process = self.list_possible_process(
+            lst_possible_process = self.list_possible_processes(
                 need_name, lst_process)
             if not lst_possible_process or self.max_instructions <= 0:
                 return False
@@ -120,8 +118,9 @@ class Child:
                 self.dict_instructions[chosen_process.name] += 1
             except KeyError:
                 self.dict_instructions[chosen_process.name] = 1
-            self.update_add_need_stock(chosen_process.need)
-            self.update_sub_need_stock(chosen_process.result)
+            update_add_stock(chosen_process.need, self.need_stock)
+            update_sub_need_stock(chosen_process.result,
+                                  self.has_stock, self.need_stock)
             while need_name in self.need_stock and self.max_instructions > 0:
                 # print(chosen_process.name, self.need_stock[need_name])
                 if self.need_stock[need_name] >= need_quantity:
@@ -131,36 +130,16 @@ class Child:
                     self.dict_instructions[chosen_process.name] += 1
                 except KeyError:
                     self.dict_instructions[chosen_process.name] = 1
-                self.update_add_need_stock(chosen_process.need)
-                self.update_sub_need_stock(chosen_process.result)
+                update_add_stock(chosen_process.need, self.need_stock)
+                update_sub_need_stock(
+                    chosen_process.result, self.has_stock, self.need_stock)
                 self.max_instructions -= 1
         return True
 
     # list available processes to fulfill the current need
-    def list_possible_process(self, need_name, lst_process):
+    def list_possible_processes(self, need_name, lst_process):
         lst_possible_process = list()
         for process in lst_process:
             if need_name in lst_process[process].result.keys():
                 lst_possible_process.append(lst_process[process])
         return lst_possible_process
-
-    def update_add_need_stock(self, items):
-        for elt in items:
-            try:
-                self.need_stock[elt] += items[elt]
-            except KeyError:
-                self.need_stock[elt] = items[elt]
-
-    # normalement pas de try except mais pour l'instant flemme de verif -> en fait si, a verifier
-    def update_sub_need_stock(self, items):
-        for elt in items:
-            try:
-                self.need_stock[elt] -= items[elt]
-            except KeyError:
-                self.need_stock[elt] = -items[elt]
-            if self.need_stock[elt] <= 0:
-                try:
-                    self.has_stock[elt] -= self.need_stock[elt]
-                except KeyError:
-                    self.has_stock[elt] = -self.need_stock[elt]
-                del self.need_stock[elt]
